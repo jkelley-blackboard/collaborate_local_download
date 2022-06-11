@@ -9,7 +9,7 @@ SELECT DISTINCT
     TO_CHAR(clm.created_time,'%m/%d/%Y %H:%M') as "RecordingCreated",  --local time zone (vs UTC)
     'https://us.bbcollab.com/recording/'||
         clm.stage['media_uid']::text as "RecordingLink",
-    'POC-LEARNSE_demo_bb_com' as "SessionOwner",                                --put your LTI Key here
+    'Your_LTI_Key' as "SessionOwner",                                --put your LTI Key here
     clr.name as "SessionName",
     clm.name as "RecordingName",
     cou.course_number as "ContextIdentifier",
