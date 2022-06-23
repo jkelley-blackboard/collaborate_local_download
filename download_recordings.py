@@ -150,7 +150,7 @@ def get_token():
 
     grant_type = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
-    exp = datetime.datetime.utcnow() + datetime.timedelta(minutes = 5)
+    exp = datetime.datetime.utcnow() + datetime.timedelta(minutes = 5)  #max token life is 5 min, can be less
 
     claims = {
         "iss" : oAuth["key"] ,
