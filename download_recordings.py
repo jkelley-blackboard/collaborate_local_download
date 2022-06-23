@@ -179,7 +179,10 @@ def get_token():
         parsed_json = json.loads(rest.text)
         #print(parsed_json)
         oAuth["token"] = parsed_json['access_token']
-        oAuth["token_expires"] = parsed_json['expires_in']
+        auth_exp = datetime.datetime.now() + datetime.timedelta(seconds=int(parsed_json['expires_in']))
+        auth_exp_strng = auth_exp.strftime('%Y/%m/%d %H:%M:%S.%f')
+        oAuth["token_expires"] = auth_exp_strng
+        print("[auth:setToken()] Token Expires at: "+ oAuth["token_expires"]) 
     else:
         print("[auth:setToken()] ERROR: " + str(rest))
 
