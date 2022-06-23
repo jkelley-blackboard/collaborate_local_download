@@ -36,7 +36,7 @@ lti_key = config['COLLAB']['LtiKey']
 lti_secret = config['COLLAB']['LtiSecret']
 recording_report = config['COLLAB']['RecordingReport']
 download_path = config['COLLAB']['DownloadPath']
-
+#####################
 
 def main():
     oAuth = get_token()
@@ -44,6 +44,8 @@ def main():
     recordingData = get_input(recording_report)
 
     for recording in recordingData:
+        if is_token_exp(oAuth):    #check if token expired
+            oAuth = get_token()    #get a new token
         recording_uid = recording.get('RecordingLink').replace(region_host+"/recording/","")
         owner = recording.get('SessionOwner')
         #print("[main()]: Working on: "+recording_uid)
@@ -64,7 +66,7 @@ def main():
         
         download_recording(url,filename,download_dir)
         print("[main()] Downloaded:" + recording_uid+" >> " + download_dir + "/" + filename)
-
+#####################
 
 def get_input(csvfile):
     #convert CSV into list of dictionaries
@@ -77,7 +79,7 @@ def get_input(csvfile):
 
     #print("[get_input()]: Success: " + list_from_csv)
     return list_from_csv
-
+#####################
 
 def filename_from_report(recording):
 
@@ -88,6 +90,7 @@ def filename_from_report(recording):
     recname = slugify(recording.get('RecordingName'))
     filename = created + "_" + session + "_" + recname + ".mp4"
     return filename
+#####################
 
 def define_dir(root, folder):
     #build dir path and handle directory for recordings without context/course
@@ -98,8 +101,7 @@ def define_dir(root, folder):
         download_dir = slugify(root) + "/" + slugify(folder)
 
     return download_dir
- 
-
+#####################
 
 def get_download_url(recording_uid, oAuth):
     #get the download url for the recording from the API using the recording uid value
@@ -120,7 +122,7 @@ def get_download_url(recording_uid, oAuth):
         download_url = "FAILED"
 
     return download_url
-
+#####################
 
 def download_recording(download_url, download_filename, download_dir):
     #execute the download to a course/context based directory
@@ -135,7 +137,7 @@ def download_recording(download_url, download_filename, download_dir):
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
     #print("[download_recording()]: Downloaded: "+ download_filename+" to "+download_path)
-
+#####################
 
 def get_token():
     #authenticate and build the oAuth object
@@ -182,7 +184,21 @@ def get_token():
         print("[auth:setToken()] ERROR: " + str(rest))
 
     return oAuth
+###################
 
+def is_token_exp(oAuth):
+
+    expired = True
+    exp_datetime = datetime.datetime.strptime(oAuth["token_expires"],'%Y/%m/%d %H:%M:%S.%f')
+    if exp_datetime < datetime.datetime.now():
+        print('[auth:is_token_exp()] Token Expired at ' + oAuth["token_expires"])
+        expired = True
+    else:
+        #print('[auth:is_token_exp()] Token will expire at ' + oAuth["token_expires"])
+        expired = False
+
+    return expired
+#####################
 
 def slugify(value, allow_unicode=True):
     """
@@ -199,5 +215,7 @@ def slugify(value, allow_unicode=True):
         value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
     value = re.sub(r'[^\w\s-]', '', value.lower())
     return re.sub(r'[-\s]+', '-', value).strip('-_')
+#####################
+
 
 main()
