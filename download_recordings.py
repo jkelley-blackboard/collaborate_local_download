@@ -7,6 +7,12 @@ builds a filename from recording attributes - leading with created date so they 
 downloads recordings into course directories as determined by ContextIdentifier column
 uses the {{CSA_URL}}/recordings/{recordingId}/url?disposition=download endpont to download them
 
+23 June 2022 - check for session expiration and renew if expired
+27 June 2022 - truncate recording filenames longer than 200 characters
+             - altered download method to handle very large recordings
+             - adjusted filename function to read date format EXACTLY as the download report  '%Y-%m-%d %H:%M:%S'
+
+
 TODO: Generate a log file
 TODO: Verify input file before starting
 TODO: Investigate downloading captions
@@ -23,7 +29,7 @@ import os.path
 import re
 import unicodedata
 import configparser
-
+import shutil
 
 
 config = configparser.ConfigParser()
@@ -83,12 +89,14 @@ def get_input(csvfile):
 
 def filename_from_report(recording):
 
-    datetime_obj = datetime.datetime.strptime(recording.get('RecordingCreated'), '%m/%d/%Y %H:%M')
+    datetime_obj = datetime.datetime.strptime(recording.get('RecordingCreated'), '%Y-%m-%d %H:%M:%S')
     created = datetime_obj.strftime("%Y%m%d_%H%M")
     
     session = slugify(recording.get('SessionName'))
     recname = slugify(recording.get('RecordingName'))
-    filename = created + "_" + session + "_" + recname + ".mp4"
+    filename = created + "_" + session + "_" + recname
+    filename = filename[:200]                               #limit filename string length
+    filename = filename + ".mp4"
     return filename
 #####################
 
@@ -134,8 +142,7 @@ def download_recording(download_url, download_filename, download_dir):
         if not os.path.exists(download_path):
             os.makedirs(download_path)
         with open(os.path.join(download_path, download_filename), "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+            shutil.copyfileobj(r.raw, f)
     #print("[download_recording()]: Downloaded: "+ download_filename+" to "+download_path)
 #####################
 
